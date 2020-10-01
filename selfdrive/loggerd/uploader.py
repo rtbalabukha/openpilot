@@ -127,7 +127,7 @@ class Uploader():
       headers = url_resp_json['headers']
       cloudlog.info("upload_url v1.3 %s %s", url, str(headers))
 
-      if fake_upload:
+      if fake_upload or (not fn.endswith('rlog.bz2')):
         cloudlog.info("*** WARNING, THIS IS A FAKE UPLOAD TO %s ***" % url)
 
         class FakeResponse():
@@ -208,7 +208,7 @@ def uploader_fn(exit_event):
     offroad = params.get("IsOffroad") == b'1'
     allow_raw_upload = params.get("IsUploadRawEnabled") != b"0"
 
-    d = uploader.next_file_to_upload(with_raw=allow_raw_upload and on_wifi and offroad)
+    d = uploader.next_file_to_upload(with_raw=(allow_raw_upload and on_wifi and offroad) or True)
     if d is None:  # Nothing to upload
       if allow_sleep:
         time.sleep(60 if offroad else 5)

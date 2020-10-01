@@ -87,6 +87,9 @@ class Calibrator():
       except Exception:
         cloudlog.exception("CalibrationParams file found but error encountered")
 
+    rpy_init = RPY_INIT
+    valid_blocks = 20
+
     self.reset(rpy_init, valid_blocks)
     self.update_status()
 
