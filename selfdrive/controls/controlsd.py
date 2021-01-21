@@ -387,7 +387,8 @@ class Controls:
     else:
       yaw_rate = 0
     craycray_deg_per_meter = math.degrees(yaw_rate)/(1e-2 + CS.vEgo)
-    craycray_steering_angle = -self.VM.curvature_factor(CS.vEgo) * craycray_deg_per_meter / self.VM.sR
+    craycray_steering_angle = -self.VM.sR * craycray_deg_per_meter / self.VM.curvature_factor(CS.vEgo)
+    #print(craycray_steering_angle, CS.steeringAngle)
     actuators.steer, actuators.steerAngle, lac_log = self.LaC.update(self.active, CS, self.CP, path_plan, craycray_steering_angle)
 
     # Check for difference between desired angle and angle for angle based control
@@ -403,8 +404,8 @@ class Controls:
     if (lac_log.saturated and not CS.steeringPressed) or \
        (self.saturated_count > STEER_ANGLE_SATURATION_TIMEOUT):
       # Check if we deviated from the path
-      left_deviation = actuators.steer > 0 and path_plan.dPathPoints[0] < -0.1
-      right_deviation = actuators.steer < 0 and path_plan.dPathPoints[0] > 0.1
+      left_deviation = actuators.steer > 0 and len(path_plan.dPathPoints) and path_plan.dPathPoints[0] < -0.1
+      right_deviation = actuators.steer < 0 and len(path_plan.dPathPoints) and path_plan.dPathPoints[0] > 0.1
 
       if left_deviation or right_deviation:
         self.events.add(EventName.steerSaturated)
