@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import math
 from cereal import car, log
 from common.numpy_fast import clip
 from common.realtime import sec_since_boot, config_realtime_process, Priority, Ratekeeper, DT_CTRL
@@ -379,7 +380,15 @@ class Controls:
     # Gas/Brake PID loop
     actuators.gas, actuators.brake = self.LoC.update(self.active, CS, v_acc_sol, plan.vTargetFuture, a_acc_sol, self.CP)
     # Steering PID loop and lateral MPC
-    actuators.steer, actuators.steerAngle, lac_log = self.LaC.update(self.active, CS, self.CP, path_plan)
+
+    angular_rates = self.sm['liveLocationKalman'].angularVelocityDevice.value
+    if len(angular_rates):
+      yaw_rate = angular_rates[2]
+    else:
+      yaw_rate = 0
+    craycray_deg_per_meter = math.degrees(yaw_rate)/(1e-2 + CS.vEgo)
+    craycray_steering_angle = -self.VM.curvature_factor(CS.vEgo) * craycray_deg_per_meter / self.VM.sR
+    actuators.steer, actuators.steerAngle, lac_log = self.LaC.update(self.active, CS, self.CP, path_plan, craycray_steering_angle)
 
     # Check for difference between desired angle and angle for angle based control
     angle_control_saturated = self.CP.steerControlType == car.CarParams.SteerControlType.angle and \

@@ -43,17 +43,16 @@ class LatControlLQR():
 
     return self.sat_count > self.sat_limit
 
-  def update(self, active, CS, CP, path_plan):
+  def update(self, active, CS, CP, path_plan, craycray_sa):
     lqr_log = log.ControlsState.LateralLQRState.new_message()
 
     steers_max = get_steer_max(CP, CS.vEgo)
     torque_scale = (0.45 + CS.vEgo / 60.0)**2  # Scale actuator model with speed
 
-    steering_angle = CS.steeringAngle
+    steering_angle = float(craycray_sa)
 
     # Subtract offset. Zero angle should correspond to zero torque
     self.angle_steers_des = path_plan.angleSteers - path_plan.angleOffset
-    steering_angle -= path_plan.angleOffset
 
     # Update Kalman filter
     angle_steers_k = float(self.C.dot(self.x_hat))
@@ -89,7 +88,7 @@ class LatControlLQR():
     check_saturation = (CS.vEgo > 10) and not CS.steeringRateLimited and not CS.steeringPressed
     saturated = self._check_saturation(self.output_steer, check_saturation, steers_max)
 
-    lqr_log.steerAngle = angle_steers_k + path_plan.angleOffset
+    lqr_log.steerAngle = angle_steers_k
     lqr_log.i = self.i_lqr
     lqr_log.output = self.output_steer
     lqr_log.lqrOutput = lqr_output

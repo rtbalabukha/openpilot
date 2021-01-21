@@ -81,10 +81,10 @@ class LatControlINDI():
 
     return self.sat_count > self.sat_limit
 
-  def update(self, active, CS, CP, path_plan):
+  def update(self, active, CS, CP, path_plan, craycray_sa):
     self.speed = CS.vEgo
     # Update Kalman filter
-    y = np.array([[math.radians(CS.steeringAngle)], [math.radians(CS.steeringRate)]])
+    y = np.array([[math.radians(craycray_sa)], [math.radians(CS.steeringRate)]])
     self.x = np.dot(self.A_K, self.x) + np.dot(self.K, y)
 
     indi_log = log.ControlsState.LateralINDIState.new_message()
@@ -97,7 +97,7 @@ class LatControlINDI():
       self.output_steer = 0.0
       self.delayed_output = 0.0
     else:
-      self.angle_steers_des = path_plan.angleSteers
+      self.angle_steers_des = path_plan.angleSteers - path_plan.angleOffset
       self.rate_steers_des = path_plan.rateSteers
 
       steers_des = math.radians(self.angle_steers_des)

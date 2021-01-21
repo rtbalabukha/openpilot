@@ -15,9 +15,9 @@ class LatControlPID():
   def reset(self):
     self.pid.reset()
 
-  def update(self, active, CS, CP, path_plan):
+  def update(self, active, CS, CP, path_plan, craycray_sa):
     pid_log = log.ControlsState.LateralPIDState.new_message()
-    pid_log.steerAngle = float(CS.steeringAngle)
+    pid_log.steerAngle = float(craycray_sa)
     pid_log.steerRate = float(CS.steeringRate)
 
     if CS.vEgo < 0.3 or not active:
@@ -25,7 +25,7 @@ class LatControlPID():
       pid_log.active = False
       self.pid.reset()
     else:
-      self.angle_steers_des = path_plan.angleSteers  # get from MPC/PathPlanner
+      self.angle_steers_des = path_plan.angleSteers - path_plan.angleOffset  # get from MPC/PathPlanner
 
       steers_max = get_steer_max(CP, CS.vEgo)
       self.pid.pos_limit = steers_max
@@ -33,7 +33,7 @@ class LatControlPID():
       steer_feedforward = self.angle_steers_des   # feedforward desired angle
       if CP.steerControlType == car.CarParams.SteerControlType.torque:
         # TODO: feedforward something based on path_plan.rateSteers
-        steer_feedforward -= path_plan.angleOffset   # subtract the offset, since it does not contribute to resistive torque
+        #steer_feedforward -= path_plan.angleOffset   # subtract the offset, since it does not contribute to resistive torque
         steer_feedforward *= CS.vEgo**2  # proportional to realigning tire momentum (~ lateral accel)
       deadzone = 0.0
 
